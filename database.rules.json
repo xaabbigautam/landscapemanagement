@@ -1,0 +1,16 @@
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null",
+    "tasks": {
+      ".indexOn": ["status", "requested_by", "assigned_to", "is_urgent", "needs_approval", "zone", "last_updated"],
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "employees": {
+      ".indexOn": ["email", "department", "zone", "role", "is_active"],
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('employees').child(auth.uid).child('role').val() === 'system_admin'"
+    }
+  }
+}

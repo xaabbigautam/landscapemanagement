@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landscaping Task Manager</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#1b5e20">
+</head>
+<body class="welcome">
+    <div class="container">
+        <div class="card">
+            <h1><i class="fas fa-leaf"></i> Landscaping Task Manager</h1>
+            <p class="subtitle">Professional Task Management System</p>
+            
+            <!-- Sync Status -->
+            <div style="margin: 20px 0; padding: 10px; background: #f1f8e9; border-radius: 10px;">
+                <span id="syncStatusText" style="color: #666; font-size: 0.9rem;">
+                    <i class="fas fa-sync"></i> Initializing...
+                </span>
+            </div>
+                       
+            <div class="buttons">
+                <a href="team.html" class="btn team">
+                    <i class="fas fa-users"></i> Team Login
+                </a>
+                <a href="admin.html" class="btn admin">
+                    <i class="fas fa-user-shield"></i> Admin Login
+                </a>
+            </div>
+            
+            <div class="info-box" style="background: #e8f5e8; padding: 20px; border-radius: 10px; margin-top: 30px;">
+                <h3><i class="fas fa-info-circle"></i> System Features</h3>
+                <ul style="text-align: left; margin-top: 10px;">
+                    <li>✓ Real-time task updates across all devices</li>
+                    <li>✓ Photo uploads with preview</li>
+                    <li>✓ Admin approval workflow</li>
+                    <li>✓ Employee management</li>
+                    <li>✓ Mobile responsive</li>
+                    <li>✓ Offline support</li>
+                    <li>✓ Role-based permissions</li>
+                    <li>✓ System Admin exclusive controls</li>
+                    <li>✓ Instant synchronization</li>
+                    <li>✓ Task assignment and tracking</li>
+                </ul>
+            </div>
+            
+            <div style="margin-top: 20px; padding: 15px; background: #fff3e0; border-radius: 10px;">
+                <h4 style="color: #e65100; margin-bottom: 10px;"><i class="fas fa-shield-alt"></i> Important</h4>
+                <p style="font-size: 0.9rem;">
+                    <strong>Team Members:</strong> Login with your email and password<br>
+                    <strong>Admins:</strong> Use admin login page for advanced controls<br>
+                    <strong>Real-time:</strong> All changes sync instantly across devices
+                </p>
+            </div>
+            
+            <div style="margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 10px; font-size: 0.8rem; color: #1565c0;">
+                <i class="fas fa-sync-alt"></i> <strong>Live Sync Status:</strong> 
+                <span id="connectionStatus">Checking connection...</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Script -->
+    <script src="script.js"></script>
+    
+    <script>
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Welcome page loaded');
+            
+            // Update sync status
+            updateSyncStatus();
+            
+            // Check connection status
+            checkConnectionStatus();
+            
+            // Auto-update sync status every 5 seconds
+            setInterval(updateSyncStatus, 5000);
+            setInterval(checkConnectionStatus, 10000);
+        });
+        
+        function checkConnectionStatus() {
+            const connectionElement = document.getElementById('connectionStatus');
+            if (!connectionElement) return;
+            
+            // Check if Firebase is initialized
+            if (typeof isFirebaseInitialized !== 'undefined' && isFirebaseInitialized) {
+                connectionElement.innerHTML = '<span style="color: #4caf50;">Connected to Server ✓</span>';
+                connectionElement.title = "Real-time sync is active";
+            } else if (typeof isOnline !== 'undefined' && isOnline) {
+                connectionElement.innerHTML = '<span style="color: #ff9800;">Online (No Server) ⚠</span>';
+                connectionElement.title = "Connected to internet but server unavailable";
+            } else {
+                connectionElement.innerHTML = '<span style="color: #c62828;">Offline ⚠</span>';
+                connectionElement.title = "No internet connection";
+            }
+        }
+        
+        // Make sure showNotification is available
+        if (!window.showNotification) {
+            window.showNotification = function(message, type) {
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 15px 25px;
+                    border-radius: 10px;
+                    background: ${type === 'error' ? '#c62828' : type === 'success' ? '#2e7d32' : '#1565c0'};
+                    color: white;
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                    z-index: 1000;
+                `;
+                notification.innerHTML = message;
+                document.body.appendChild(notification);
+                setTimeout(() => notification.remove(), 3000);
+            };
+        }
+    </script>
+</body>
+</html>

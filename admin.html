@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin • Greenfield Pro</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Login Form -->
+        <div id="loginForm" class="card">
+            <h2><i class="fas fa-user-shield"></i> Admin Login</h2>
+            <p class="subtitle">Administrator access only</p>
+            
+            <div class="form-group">
+                <label>Admin Email</label>
+                <input type="email" id="adminEmail" placeholder="admin@landscape.com" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Password</label>
+                <div style="position: relative;">
+                    <input type="password" id="adminPassword" placeholder="Enter your password" required>
+                    <button type="button" onclick="togglePassword('adminPassword')" 
+                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); 
+                                   background: none; border: none; color: #666; cursor: pointer;">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <button onclick="handleAdminLogin()" class="btn login">
+                <i class="fas fa-sign-in-alt"></i> LOGIN AS ADMIN
+            </button>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="index.html" class="btn small">
+                    <i class="fas fa-arrow-left"></i> Back to Home
+                </a>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminDashboard" class="hidden">
+            <!-- Sync Status Bar -->
+            <div style="margin-bottom: 20px; padding: 10px 15px; background: #f1f8e9; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <span id="syncStatusText" style="color: #666; font-size: 0.9rem;">
+                        <i class="fas fa-sync"></i> Connecting...
+                    </span>
+                </div>
+                <div>
+                    <button onclick="refreshData()" class="btn small" style="padding: 5px 15px; font-size: 0.8rem;">
+                        <i class="fas fa-redo"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            
+            <div class="header">
+                <div>
+                    <h3><i class="fas fa-crown"></i> Admin Dashboard</h3>
+                    <p style="color: #666; font-size: 0.9rem;">
+                        Welcome, <span id="adminName">Admin</span>
+                        <span id="adminRoleBadge" class="status-badge" style="margin-left: 10px; background: #1b5e20;">ADMIN</span>
+                        <span id="systemAdminBadge" class="hidden status-badge" style="margin-left: 5px; background: #c62828;">SYSTEM ADMIN</span>
+                    </p>
+                </div>
+                <div>
+                    <button onclick="exportToExcel()" class="btn small blue">
+                        <i class="fas fa-file-excel"></i> Export
+                    </button>
+                    <button onclick="showStatsModal()" class="btn small">
+                        <i class="fas fa-chart-bar"></i> Stats
+                    </button>
+                    <button onclick="logout()" class="btn small red">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card">
+                <h3><i class="fas fa-chart-line"></i> Quick Overview</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px;">
+                    <div style="text-align: center; padding: 15px; background: #f1f8e9; border-radius: 10px;">
+                        <h4 style="color: #1b5e20;" id="totalTasks">0</h4>
+                        <p>Total Tasks</p>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: #fff3e0; border-radius: 10px;">
+                        <h4 style="color: #e65100;" id="pendingTasks">0</h4>
+                        <p>Pending</p>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: #e8f5e8; border-radius: 10px;">
+                        <h4 style="color: #2e7d32;" id="approvedTasks">0</h4>
+                        <p>Approved</p>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: #e3f2fd; border-radius: 10px;">
+                        <h4 style="color: #1565c0;" id="completedTasks">0</h4>
+                        <p>Completed</p>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: #fff8e1; border-radius: 10px;">
+                        <h4 style="color: #ff9800;" id="needsApprovalTasks">0</h4>
+                        <p>Needs Approval</p>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: #ffebee; border-radius: 10px;">
+                        <h4 style="color: #c62828;" id="urgentTasks">0</h4>
+                        <p>Urgent Tasks</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" onclick="openTab(event, 'approvalTab')" id="approvalTabBtn">
+                    <i class="fas fa-check-circle"></i> Approve Tasks
+                    <span id="approvalBadge" class="notification-badge" style="display: none;">0</span>
+                </button>
+                <button class="tab-btn" onclick="openTab(event, 'createTaskTab')">
+                    <i class="fas fa-plus-circle"></i> Create Task
+                </button>
+                <button class="tab-btn" onclick="openTab(event, 'assignTaskTab')">
+                    <i class="fas fa-user-tie"></i> Assign Tasks
+                </button>
+                <button class="tab-btn" onclick="openTab(event, 'urgentTaskTab')">
+                    <i class="fas fa-exclamation-triangle"></i> Urgent Task
+                </button>
+                <button class="tab-btn" onclick="openTab(event, 'employeeTab')" id="manageEmployeesTab">
+                    <i class="fas fa-users-cog"></i> Manage Employees
+                </button>
+                <button class="tab-btn" onclick="openTab(event, 'tasksTab')">
+                    <i class="fas fa-tasks"></i> All Tasks
+                </button>
+            </div>
+
+            <!-- Tab 1: Task Approval -->
+            <div id="approvalTab" class="tab-content active">
+                <div class="card">
+                    <h3><i class="fas fa-check-circle"></i> Pending Approvals (<span id="approvalCount">0</span>)</h3>
+                    <p class="subtitle">Review and approve tasks submitted by team members</p>
+                    
+                    <div class="approval-alert">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Add notes when approving or rejecting tasks</span>
+                    </div>
+                    
+                    <div id="approvalTaskList">
+                        <div class="loading">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Loading tasks for approval...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Create Task -->
+            <div id="createTaskTab" class="tab-content">
+                <div class="card">
+                    <h3><i class="fas fa-plus-circle"></i> Create & Assign Task</h3>
+                    <p class="subtitle">Create a new task and assign it to an employee</p>
+                    
+                    <div class="form-group">
+                        <label>Task Description *</label>
+                        <textarea id="adminTaskDescription" placeholder="Describe the task in detail..." rows="3" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Zone *</label>
+                        <select id="adminTaskZone" required>
+                            <option value="">Select Zone</option>
+                            <option value="Main Villa">Main Villa</option>
+                            <option value="Main SPA">Main SPA</option>
+                            <option value="Mountain Villa">Mountain Villa</option>
+                            <option value="Entourage">Entourage</option>
+                            <option value="Pool House">Pool House</option>
+                            <option value="Gate 3">Gate 3</option>
+                            <option value="Golf Landscaping">Golf Landscaping</option>
+                            <option value="Areesh">Areesh</option>
+                            <option value="MUD 1">MUD 1</option>
+                            <option value="MUD 2">MUD 2</option>
+                            <option value="MUD 3">MUD 3</option>
+                            <option value="MUD 4">MUD 4</option>
+                            <option value="MUD 5">MUD 5</option>
+                            <option value="MUD 6">MUD 6</option>
+                            <option value="Paddle Court">Paddle Court</option>
+                            <option value="Gaming Building">Gaming Building</option>
+                            <option value="Indian Palace Front">Indian Palace Front</option>
+                            <option value="Indian Palace back">Indian Palace back</option>
+                            <option value="Royal Caravan">Royal Caravan</option>
+                            <option value="Cycle Track">Cycle Track</option>
+                            <option value="POD 1 Indoor">POD 1 Indoor</option>
+                            <option value="POD 1 Out door">POD 1 Outdoor</option>
+                            <option value="Royal Road">Royal Road</option>
+                            <option value="Gate 5">Gate 5</option>
+                            <option value="VIP Hotel">VIP Hotel</option>
+                            <option value="Staff Canteen Z1">Staff Canteen Z1</option>
+                            <option value="Staff Canteen Z2">Staff Canteen Z2</option>
+                            <option value="Staff Canteen Z3">Staff Canteen Z3</option>
+                            <option value="Other">Other Area</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Assign To (Optional)</label>
+                        <select id="adminTaskAssignTo">
+                            <option value="">Select employee (optional)</option>
+                            <!-- Dynamically populated -->
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Due Date (Optional)</label>
+                        <input type="date" id="adminTaskDueDate">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-camera"></i> Add Photo (Optional - Max 2MB)
+                        </label>
+                        <input type="file" id="adminTaskPhoto" accept="image/*" style="padding: 10px;">
+                        <div id="adminPhotoPreview" style="margin-top: 10px;"></div>
+                    </div>
+                    
+                    <button onclick="submitAdminTask()" class="btn submit" id="submitAdminTaskBtn">
+                        <i class="fas fa-paper-plane"></i> CREATE & ASSIGN TASK
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab 3: Assign Tasks -->
+            <div id="assignTaskTab" class="tab-content">
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3><i class="fas fa-user-tie"></i> Assign Tasks</h3>
+                    </div>
+                    
+                    <!-- Assign Existing Task Section -->
+                    <div style="padding: 20px; background: #f5f9ff; border-radius: 10px; border: 2px solid #1565c0;">
+                        <h4 style="color: #1565c0; margin-bottom: 15px;"><i class="fas fa-exchange-alt"></i> Assign Existing Task</h4>
+                        
+                        <div class="form-group">
+                            <label>Select Existing Task *</label>
+                            <select id="taskToAssign" required>
+                                <option value="">Select a task</option>
+                                <!-- Dynamically populated -->
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Assign To *</label>
+                            <select id="assignToEmployee" required>
+                                <option value="">Select employee</option>
+                                <!-- Dynamically populated -->
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Due Date (Optional)</label>
+                            <input type="date" id="assignmentDueDate">
+                        </div>
+                        
+                        <button onclick="assignSelectedTask()" class="btn blue" id="assignTaskBtn">
+                            <i class="fas fa-user-check"></i> ASSIGN TASK
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 4: Urgent Task -->
+            <div id="urgentTaskTab" class="tab-content">
+                <div class="card">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Create Urgent Task</h3>
+                    <p class="subtitle" style="color: #c62828;">For immediate attention tasks</p>
+                    
+                    <div class="urgent-alert">
+                        <i class="fas fa-bell"></i>
+                        <span>Urgent tasks will be highlighted in red and notified to all team members</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Task Description *</label>
+                        <textarea id="urgentTaskDescription" placeholder="Describe the urgent task..." rows="3" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Zone *</label>
+                        <select id="urgentTaskZone" required>
+                            <option value="">Select Zone</option>
+                            <option value="Main Villa">Main Villa</option>
+                            <option value="Main SPA">Main SPA</option>
+                            <option value="Mountain Villa">Mountain Villa</option>
+                            <option value="Entourage">Entourage</option>
+                            <option value="Pool House">Pool House</option>
+                            <option value="Gate 3">Gate 3</option>
+                            <option value="Golf Landscaping">Golf Landscaping</option>
+                            <option value="Areesh">Areesh</option>
+                            <option value="MUD 1">MUD 1</option>
+                            <option value="MUD 2">MUD 2</option>
+                            <option value="MUD 3">MUD 3</option>
+                            <option value="MUD 4">MUD 4</option>
+                            <option value="MUD 5">MUD 5</option>
+                            <option value="MUD 6">MUD 6</option>
+                            <option value="Paddle Court">Paddle Court</option>
+                            <option value="Gaming Building">Gaming Building</option>
+                            <option value="Indian Palace Front">Indian Palace Front</option>
+                            <option value="Indian Palace back">Indian Palace back</option>
+                            <option value="Royal Caravan">Royal Caravan</option>
+                            <option value="Cycle Track">Cycle Track</option>
+                            <option value="POD 1 Indoor">POD 1 Indoor</option>
+                            <option value="POD 1 Out door">POD 1 Outdoor</option>
+                            <option value="Royal Road">Royal Road</option>
+                            <option value="Gate 5">Gate 5</option>
+                            <option value="VIP Hotel">VIP Hotel</option>
+                            <option value="Staff Canteen Z1">Staff Canteen Z1</option>
+                            <option value="Staff Canteen Z2">Staff Canteen Z2</option>
+                            <option value="Staff Canteen Z3">Staff Canteen Z3</option>
+                            <option value="Other">Other Area</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Assign To (Optional)</label>
+                        <select id="urgentAssignTo">
+                            <option value="">Select employee (optional)</option>
+                            <!-- Dynamically populated -->
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-camera"></i> Add Photo (Optional - Max 2MB)
+                        </label>
+                        <input type="file" id="urgentTaskPhoto" accept="image/*" style="padding: 10px;">
+                        <div id="urgentPhotoPreview" style="margin-top: 10px;"></div>
+                    </div>
+                    
+                    <button onclick="submitUrgentTask()" class="btn red" id="submitUrgentTaskBtn">
+                        <i class="fas fa-bolt"></i> CREATE URGENT TASK
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab 5: Manage Employees -->
+            <div id="employeeTab" class="tab-content">
+                <div class="card">
+                    <h3><i class="fas fa-users-cog"></i> Manage Employees</h3>
+                    <p class="subtitle" id="employeeSubtitle">View all team members including hardcoded ones</p>
+                    
+                    <!-- Add New Employee Form (Only for System Admin) -->
+                    <div id="addEmployeeForm" style="padding: 20px; background: #f1f8e9; border-radius: 10px; margin-bottom: 20px;">
+                        <h4 style="color: #1b5e20; margin-bottom: 15px;"><i class="fas fa-user-plus"></i> Add New Employee</h4>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Full Name *</label>
+                                <input type="text" id="newEmpName" placeholder="John Doe">
+                            </div>
+                            <div class="form-group">
+                                <label>Email *</label>
+                                <input type="email" id="newEmpEmail" placeholder="john@greenfield.com">
+                                <small style="color: #666;">Must contain '@' and '.'</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Password *</label>
+                                <div style="position: relative;">
+                                    <input type="text" id="newEmpPassword" placeholder="Create password">
+                                    <button type="button" onclick="generatePassword()" 
+                                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); 
+                                                   background: #4caf50; color: white; border: none; border-radius: 5px; 
+                                                   padding: 5px 10px; font-size: 12px; cursor: pointer;">
+                                        Generate
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Role</label>
+                                <select id="newEmpRole">
+                                    <option value="team">Team Member</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="system_admin">System Admin</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Department</label>
+                                <select id="newEmpDept">
+                                    <option value="Landscaping">Landscaping</option>
+                                    <option value="Maintenance">Maintenance</option>
+                                    <option value="Irrigation">Irrigation</option>
+                                    <option value="VIP Services">VIP Services</option>
+                                    <option value="Golf Course">Golf Course</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Zone</label>
+                                <input type="text" id="newEmpZone" placeholder="Main Villa, Garden, etc.">
+                            </div>
+                        </div>
+                        
+                        <button onclick="addNewEmployee()" class="btn submit">
+                            <i class="fas fa-save"></i> ADD EMPLOYEE
+                        </button>
+                    </div>
+                    
+                    <!-- Employees List -->
+                    <div id="employeesList">
+                        <div class="loading">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Loading all employees...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 6: All Tasks -->
+            <div id="tasksTab" class="tab-content">
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3><i class="fas fa-list-alt"></i> All Tasks (<span id="taskCount">0</span>)</h3>
+                        <div>
+                            <select id="filterStatus" onchange="filterTasks()" style="width: auto; padding: 10px; margin-right: 10px;">
+                                <option value="">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="approved">Approved</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                            <input type="text" id="adminSearch" placeholder="Search tasks..." 
+                                   onkeyup="filterTasks()" style="width: auto; min-width: 250px;">
+                        </div>
+                    </div>
+                    
+                    <div id="taskList">
+                        <div class="loading">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Loading tasks...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Modal -->
+    <div id="statsModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-chart-pie"></i> Task Statistics</h3>
+                <button onclick="closeStatsModal()" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="statsContent">
+                Loading statistics...
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Script -->
+    <script src="script.js"></script>
+    
+    <!-- Admin Page Specific Script -->
+    <script>
+        // Global variables
+        let allEmployees = {};
+        let allAdminTasks = {};
+        let isSystemAdminUser = false;
+        let currentTab = 'approvalTab';
+        
+        // Check if user is already logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Admin page loaded");
+            
+            const savedUser = localStorage.getItem('greenfield_user');
+            if (savedUser) {
+                try {
+                    const userData = JSON.parse(savedUser);
+                    
+                    if (userData.isAdmin) {
+                        showAdminDashboard(userData);
+                        loadInitialData();
+                    } else {
+                        window.location.href = 'team.html';
+                    }
+                } catch (e) {
+                    console.error("Error parsing user data:", e);
+                    localStorage.removeItem('greenfield_user');
+                }
+            }
+            
+            // Setup event listeners
+            setupEventListeners();
+        });
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Handle Enter key in login form
+            const adminPasswordInput = document.getElementById('adminPassword');
+            if (adminPasswordInput) {
+                adminPasswordInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        handleAdminLogin();
+                    }
+                });
+            }
+            
+            // Photo preview handlers
+            setupPhotoPreview('adminTaskPhoto', 'adminPhotoPreview');
+            setupPhotoPreview('urgentTaskPhoto', 'urgentPhotoPreview');
+            
+            // Listen for task updates from main script
+            window.addEventListener('taskUpdate', function() {
+                console.log("Task update received");
+                loadAdminTasks();
+                updateAdminDashboard();
+            });
+        }
+        
+        // Load admin tasks from global variable or local storage
+        function loadAdminTasks() {
+            try {
+                // Try to get from global variable first
+                if (typeof getAllTasks === 'function') {
+                    allAdminTasks = getAllTasks().reduce((acc, task) => {
+                        acc[task.id] = task;
+                        return acc;
+                    }, {});
+                } else {
+                    // Fallback to local storage
+                    allAdminTasks = JSON.parse(localStorage.getItem('greenfield_tasks') || '{}');
+                }
+                console.log("Loaded admin tasks:", Object.keys(allAdminTasks).length);
+            } catch (error) {
+                console.error("Error loading admin tasks:", error);
+                allAdminTasks = {};
+            }
+        }
+        
+        // Setup photo preview
+        function setupPhotoPreview(inputId, previewId) {
+            const inputElement = document.getElementById(inputId);
+            if (inputElement) {
+                inputElement.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        if (file.size > 2 * 1024 * 1024) {
+                            showNotification("Image too large (max 2MB)", "error");
+                            this.value = '';
+                            return;
+                        }
+                        
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const previewElement = document.getElementById(previewId);
+                            if (previewElement) {
+                                previewElement.innerHTML = `
+                                    <img src="${e.target.result}" alt="Preview" 
+                                         style="max-width: 200px; border-radius: 8px; border: 2px solid #4caf50;">
+                                `;
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+        }
+        
+        // Toggle password visibility
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            
+            const icon = input.parentElement.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fas fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fas fa-eye';
+            }
+        }
+        
+        // Handle admin login
+        async function handleAdminLogin() {
+            const email = document.getElementById('adminEmail').value.trim();
+            const password = document.getElementById('adminPassword').value;
+            
+            const success = await adminLogin(email, password);
+            if (success) {
+                const savedUser = JSON.parse(localStorage.getItem('greenfield_user'));
+                if (savedUser && savedUser.isAdmin) {
+                    showAdminDashboard(savedUser);
+                    loadInitialData();
+                }
+            }
+        }
+        
+        // Load initial data
+        function loadInitialData() {
+            loadAllEmployees();
+            renderApprovalTasks();
+            updateStats();
+            
+            // Load employees for admin task assignment
+            loadEmployeesForAdminTask();
+            loadTasksForAssignment();
+            
+            // Start listening for updates
+            startUpdateListener();
+        }
+        
+        // Start listening for updates
+        function startUpdateListener() {
+            // Check for updates every 5 seconds
+            setInterval(() => {
+                if (document.visibilityState === 'visible') {
+                    loadAdminTasks();
+                    updateAdminDashboard();
+                }
+            }, 5000);
+        }
+        
+        // Show admin dashboard
+        function showAdminDashboard(userData) {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('adminDashboard').classList.remove('hidden');
+            document.getElementById('adminName').textContent = userData.name;
+            
+            // Show appropriate role badge
+            isSystemAdminUser = userData.isSystemAdmin || false;
+            if (isSystemAdminUser) {
+                document.getElementById('systemAdminBadge').classList.remove('hidden');
+                document.getElementById('adminRoleBadge').style.display = 'none';
+            }
+            
+            // Hide manage employees tab if not system admin
+            if (!isSystemAdminUser) {
+                const manageEmployeesTab = document.getElementById('manageEmployeesTab');
+                if (manageEmployeesTab) {
+                    manageEmployeesTab.style.display = 'none';
+                }
+                const employeeSubtitle = document.getElementById('employeeSubtitle');
+                if (employeeSubtitle) {
+                    employeeSubtitle.textContent = "View employee details (System Admin only for editing)";
+                }
+                const addEmployeeForm = document.getElementById('addEmployeeForm');
+                if (addEmployeeForm) {
+                    addEmployeeForm.style.display = 'none';
+                }
+            }
+            
+            // Update sync status
+            updateSyncStatus();
+        }
+        
+        // Update admin dashboard
+        function updateAdminDashboard() {
+            loadAdminTasks();
+            updateStats();
+            renderApprovalTasks();
+            filterTasks();
+            loadTasksForAssignment();
+            loadAllEmployeesForAssignment();
+            
+            // Update approval badge
+            updateApprovalBadge();
+        }
+        
+        // Update approval badge
+        function updateApprovalBadge() {
+            const tasksNeedingApproval = Object.values(allAdminTasks || {}).filter(task => 
+                task.status === 'pending' && 
+                !task.is_admin_request && 
+                task.needs_approval
+            );
+            
+            const approvalBadge = document.getElementById('approvalBadge');
+            const approvalCountElement = document.getElementById('approvalCount');
+            
+            if (tasksNeedingApproval.length > 0) {
+                if (approvalBadge) {
+                    approvalBadge.textContent = tasksNeedingApproval.length;
+                    approvalBadge.style.display = 'inline-block';
+                }
+                if (approvalCountElement) {
+                    approvalCountElement.textContent = tasksNeedingApproval.length;
+                }
+            } else {
+                if (approvalBadge) {
+                    approvalBadge.style.display = 'none';
+                }
+                if (approvalCountElement) {
+                    approvalCountElement.textContent = '0';
+                }
+            }
+        }
+        
+        // Open tab
+        function openTab(event, tabId) {
+            // Store current tab
+            currentTab = tabId;
+            
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            const tabContent = document.getElementById(tabId);
+            if (tabContent) {
+                tabContent.classList.add('active');
+            }
+            
+            // Activate clicked tab button
+            if (event && event.target) {
+                const target = event.target.closest('.tab-btn');
+                if (target) {
+                    target.classList.add('active');
+                }
+            }
+            
+            // Load data for the tab
+            switch(tabId) {
+                case 'approvalTab':
+                    renderApprovalTasks();
+                    break;
+                case 'createTaskTab':
+                    loadEmployeesForAdminTask();
+                    break;
+                case 'assignTaskTab':
+                    loadTasksForAssignment();
+                    loadAllEmployeesForAssignment();
+                    break;
+                case 'urgentTaskTab':
+                    loadAllEmployeesForUrgentTask();
+                    break;
+                case 'employeeTab':
+                    loadAllEmployees();
+                    break;
+                case 'tasksTab':
+                    filterTasks();
+                    break;
+            }
+        }
+        
+        // Load employees for admin task creation
+        function loadEmployeesForAdminTask() {
+            const employeeSelect = document.getElementById('adminTaskAssignTo');
+            if (!employeeSelect) return;
+            
+            // Clear existing options
+            employeeSelect.innerHTML = '<option value="">Select employee (optional)</option>';
+            
+            // Add hardcoded team members first
+            const hardcodedTeamMembers = {
+                'subash@teamlead.com': { name: 'Subash Rai', department: 'Landscaping', zone: 'Downtown', role: 'team' },
+                'pawan@teamlead.com': { name: 'Pawan Koirala', department: 'Maintenance', zone: 'Areesh/Green Team/PODs Indoor', role: 'team' },
+                'sujan@teamlead.com': { name: 'Sujan Subedi', department: 'Irrigation', zone: 'MUD IP', role: 'team' },
+                'saroj@teamlead.com': { name: 'Saroj Pokhrel', department: 'VIP Services', zone: 'PODs/VIP/RC/gate 5', role: 'team' },
+                'taraknath@teamlead.com': { name: 'Taraknath Sharma', department: 'Golf Course', zone: 'Golf Landscaping', role: 'team' },
+                'ghadindra@teamlead.com': { name: 'Ghadindra Chaulagain', department: 'Irrigation', zone: 'Irrigation MUD/IP/POD/GATE 5', role: 'team' },
+                'shambhu@teamlead.com': { name: 'Shambhu Kumar Sah', department: 'Irrigation', zone: 'Irrigation Areesh/Downtown', role: 'team' },
+                'sunil@teamlead.com': { name: 'Sunil Kumar Sah Sudi', department: 'Irrigation', zone: 'Palm Trees', role: 'team' }
+            };
+            
+            // Add hardcoded team members
+            Object.entries(hardcodedTeamMembers).forEach(([email, emp]) => {
+                const option = document.createElement('option');
+                option.value = email;
+                option.textContent = `${emp.name} (${emp.department}) - Hardcoded`;
+                option.style.fontWeight = 'bold';
+                employeeSelect.appendChild(option);
+            });
+            
+            // Add Firebase employees (excluding hardcoded ones)
+            Object.entries(allEmployees).forEach(([email, emp]) => {
+                if (emp.is_active !== false && emp.role === 'team' && !hardcodedTeamMembers[email]) {
+                    const option = document.createElement('option');
+                    option.value = email;
+                    option.textContent = `${emp.name} (${emp.department})`;
+                    employeeSelect.appendChild(option);
+                }
+            });
+        }
+        
+        // Render tasks for approval
+        function renderApprovalTasks() {
+            const approvalTaskList = document.getElementById('approvalTaskList');
+            if (!approvalTaskList) {
+                console.error("approvalTaskList element not found");
+                return;
+            }
+            
+            console.log("Rendering approval tasks");
+            
+            // Show only team-created pending tasks that need approval
+            const tasksNeedingApproval = Object.values(allAdminTasks || {}).filter(task => 
+                task.status === 'pending' && 
+                !task.is_admin_request && 
+                task.needs_approval
+            );
+            
+            console.log("Tasks needing approval found:", tasksNeedingApproval.length);
+            
+            // Update count
+            updateApprovalBadge();
+            
+            if (tasksNeedingApproval.length === 0) {
+                approvalTaskList.innerHTML = `
+                    <div style="text-align: center; padding: 30px; color: #666;">
+                        <i class="fas fa-check-circle" style="font-size: 3rem; color: #4caf50; margin-bottom: 15px;"></i>
+                        <h4 style="color: #4caf50;">No Tasks Pending Approval</h4>
+                        <p>All team tasks have been reviewed and approved.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '<div style="display: grid; gap: 15px;">';
+            
+            tasksNeedingApproval.forEach((task) => {
+                const requestedDate = task.requested_at ? 
+                    new Date(task.requested_at).toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }) : 'Date not set';
+                
+                html += `
+                    <div class="task-card needs-approval">
+                        <div class="task-meta">
+                            <div>
+                                <span class="status-badge status-Pending">
+                                    <i class="fas fa-clock"></i> PENDING APPROVAL
+                                </span>
+                                <strong>${task.zone || 'No Zone'}</strong>
+                            </div>
+                            <small>${requestedDate}</small>
+                        </div>
+                        
+                        <p style="margin: 10px 0;">${task.description || 'No description'}</p>
+                        
+                        <div style="margin: 15px 0; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+                            <h5 style="color: #666; margin-bottom: 10px;">Requester Details</h5>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                                <div>
+                                    <div style="font-size: 0.85rem; color: #888;">Requested By</div>
+                                    <div><i class="fas fa-user"></i> ${task.requested_by_name || task.requested_by}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.85rem; color: #888;">Department</div>
+                                    <div><i class="fas fa-briefcase"></i> ${task.department || 'Not specified'}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${task.photoBase64 ? `
+                            <div style="margin: 10px 0;">
+                                <p style="font-size: 14px; color: #666; margin-bottom: 5px;">
+                                    <i class="fas fa-camera"></i> Photo attached
+                                </p>
+                                <img src="${task.photoBase64}" alt="Task photo" 
+                                     style="width: 150px; height: 150px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 1px solid #ddd;"
+                                     onclick="openPhotoModal('${task.photoBase64.replace(/'/g, "\\'").replace(/"/g, '\\"')}')">
+                            </div>
+                        ` : ''}
+                        
+                        <div class="task-actions">
+                            <button class="btn submit" onclick="approveTaskWithNote('${task.id}')">
+                                <i class="fas fa-check"></i> APPROVE WITH NOTE
+                            </button>
+                            <button class="btn red" onclick="rejectTaskWithReason('${task.id}')">
+                                <i class="fas fa-times"></i> REJECT
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            approvalTaskList.innerHTML = html;
+        }
+        
+        // Approve task with note
+        async function approveTaskWithNote(taskId) {
+            const note = prompt("Add an approval note (optional):", "");
+            if (note === null) return;
+            
+            const success = await approveTask(taskId, note);
+            if (success) {
+                renderApprovalTasks();
+                updateStats();
+                filterTasks();
+            }
+        }
+        
+        // Reject task with reason
+        async function rejectTaskWithReason(taskId) {
+            const reason = prompt("Please provide a reason for rejection:", "");
+            if (reason === null) return;
+            
+            const success = await rejectTask(taskId, reason);
+            if (success) {
+                renderApprovalTasks();
+                updateStats();
+                filterTasks();
+            }
+        }
+        
+        // Submit admin task
+        async function submitAdminTask() {
+            const description = document.getElementById('adminTaskDescription').value.trim();
+            const zone = document.getElementById('adminTaskZone').value;
+            const employeeEmail = document.getElementById('adminTaskAssignTo').value || null;
+            const dueDate = document.getElementById('adminTaskDueDate').value || null;
+            const photoFile = document.getElementById('adminTaskPhoto').files[0] || null;
+            
+            if (!description || !zone || zone === "") {
+                showNotification("Please fill all required fields", "error");
+                return;
+            }
+            
+            // Validate email if provided
+            if (employeeEmail && !validateEmail(employeeEmail)) {
+                showNotification("Please enter a valid email address", "error");
+                return;
+            }
+            
+            const submitBtn = document.getElementById('submitAdminTaskBtn');
+            if (!submitBtn) return;
+            
+            const originalText = submitBtn.innerHTML;
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CREATING...';
+            
+            try {
+                const success = await createAdminTask(description, zone, photoFile, employeeEmail);
+                
+                if (success) {
+                    // Clear form
+                    document.getElementById('adminTaskDescription').value = '';
+                    document.getElementById('adminTaskZone').selectedIndex = 0;
+                    document.getElementById('adminTaskAssignTo').selectedIndex = 0;
+                    document.getElementById('adminTaskDueDate').value = '';
+                    document.getElementById('adminTaskPhoto').value = '';
+                    document.getElementById('adminPhotoPreview').innerHTML = '';
+                    
+                    showNotification("Admin task created successfully!" + (employeeEmail ? " Assigned to employee." : ""), "success");
+                    
+                    // Update UI
+                    updateAdminDashboard();
+                }
+            } catch (error) {
+                console.error("Error creating admin task:", error);
+                showNotification("Error: " + error.message, "error");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        }
+        
+        // Load tasks for assignment
+        function loadTasksForAssignment() {
+            const taskSelect = document.getElementById('taskToAssign');
+            if (!taskSelect) return;
+            
+            // Clear existing options
+            taskSelect.innerHTML = '<option value="">Select a task</option>';
+            
+            // Get approved but unassigned tasks
+            const unassignedTasks = Object.values(allAdminTasks || {}).filter(task => 
+                task.status === 'approved' && !task.assigned_to
+            );
+            
+            unassignedTasks.forEach((task) => {
+                const option = document.createElement('option');
+                option.value = task.id;
+                const desc = task.description ? 
+                    (task.description.length > 50 ? task.description.substring(0, 50) + '...' : task.description) 
+                    : 'No description';
+                option.textContent = `${task.zone || 'No Zone'}: ${desc}`;
+                taskSelect.appendChild(option);
+            });
+        }
+        
+        // Load all employees for assignment
+        function loadAllEmployeesForAssignment() {
+            const employeeSelect = document.getElementById('assignToEmployee');
+            const urgentEmployeeSelect = document.getElementById('urgentAssignTo');
+            
+            if (!employeeSelect) return;
+            
+            // Clear existing options
+            employeeSelect.innerHTML = '<option value="">Select employee</option>';
+            if (urgentEmployeeSelect) {
+                urgentEmployeeSelect.innerHTML = '<option value="">Select employee (optional)</option>';
+            }
+            
+            // Add hardcoded team members first
+            const hardcodedTeamMembers = {
+                'subash@teamlead.com': { name: 'Subash Rai', department: 'Landscaping', zone: 'Downtown', role: 'team' },
+                'pawan@teamlead.com': { name: 'Pawan Koirala', department: 'Maintenance', zone: 'Areesh/Green Team/PODs Indoor', role: 'team' },
+                'sujan@teamlead.com': { name: 'Sujan Subedi', department: 'Irrigation', zone: 'MUD IP', role: 'team' },
+                'saroj@teamlead.com': { name: 'Saroj Pokhrel', department: 'VIP Services', zone: 'PODs/VIP/RC/gate 5', role: 'team' },
+                'taraknath@teamlead.com': { name: 'Taraknath Sharma', department: 'Golf Course', zone: 'Golf Landscaping', role: 'team' },
+                'ghadindra@teamlead.com': { name: 'Ghadindra Chaulagain', department: 'Irrigation', zone: 'Irrigation MUD/IP/POD/GATE 5', role: 'team' },
+                'shambhu@teamlead.com': { name: 'Shambhu Kumar Sah', department: 'Irrigation', zone: 'Irrigation Areesh/Downtown', role: 'team' },
+                'sunil@teamlead.com': { name: 'Sunil Kumar Sah Sudi', department: 'Irrigation', zone: 'Palm Trees', role: 'team' }
+            };
+            
+            // Add hardcoded team members
+            Object.entries(hardcodedTeamMembers).forEach(([email, emp]) => {
+                // For assignment dropdown
+                const option1 = document.createElement('option');
+                option1.value = email;
+                option1.textContent = `${emp.name} (${emp.department}) - Hardcoded`;
+                option1.style.fontWeight = 'bold';
+                employeeSelect.appendChild(option1);
+                
+                // For urgent task dropdown
+                if (urgentEmployeeSelect) {
+                    const option3 = document.createElement('option');
+                    option3.value = email;
+                    option3.textContent = `${emp.name} (${emp.department}) - Hardcoded`;
+                    option3.style.fontWeight = 'bold';
+                    urgentEmployeeSelect.appendChild(option3);
+                }
+            });
+            
+            // Add Firebase employees (excluding hardcoded ones)
+            Object.entries(allEmployees).forEach(([email, emp]) => {
+                if (emp.is_active !== false && emp.role === 'team' && !hardcodedTeamMembers[email]) {
+                    // For assignment dropdown
+                    const option1 = document.createElement('option');
+                    option1.value = email;
+                    option1.textContent = `${emp.name} (${emp.department})`;
+                    employeeSelect.appendChild(option1);
+                    
+                    // For urgent task dropdown
+                    if (urgentEmployeeSelect) {
+                        const option3 = document.createElement('option');
+                        option3.value = email;
+                        option3.textContent = `${emp.name} (${emp.department})`;
+                        urgentEmployeeSelect.appendChild(option3);
+                    }
+                }
+            });
+        }
+        
+        // Load employees for urgent task
+        function loadAllEmployeesForUrgentTask() {
+            loadAllEmployeesForAssignment();
+        }
+        
+        // Assign selected task
+        async function assignSelectedTask() {
+            const taskId = document.getElementById('taskToAssign').value;
+            const employeeEmail = document.getElementById('assignToEmployee').value;
+            const dueDate = document.getElementById('assignmentDueDate').value;
+            
+            if (!taskId || !employeeEmail) {
+                showNotification("Please select a task and employee", "error");
+                return;
+            }
+            
+            // Validate email
+            if (!validateEmail(employeeEmail)) {
+                showNotification("Please enter a valid email address", "error");
+                return;
+            }
+            
+            const assignBtn = document.getElementById('assignTaskBtn');
+            if (!assignBtn) return;
+            
+            const originalText = assignBtn.innerHTML;
+            
+            assignBtn.disabled = true;
+            assignBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ASSIGNING...';
+            
+            try {
+                const success = await assignTask(taskId, employeeEmail, dueDate);
+                if (success) {
+                    // Clear form
+                    document.getElementById('taskToAssign').selectedIndex = 0;
+                    document.getElementById('assignToEmployee').selectedIndex = 0;
+                    document.getElementById('assignmentDueDate').value = '';
+                    
+                    showNotification("Task assigned successfully!", "success");
+                    
+                    // Reload tasks for assignment
+                    loadTasksForAssignment();
+                    updateAdminDashboard();
+                }
+            } catch (error) {
+                console.error("Error assigning task:", error);
+                showNotification("Error: " + error.message, "error");
+            } finally {
+                assignBtn.disabled = false;
+                assignBtn.innerHTML = originalText;
+            }
+        }
+        
+        // Submit urgent task
+        async function submitUrgentTask() {
+            const description = document.getElementById('urgentTaskDescription').value.trim();
+            const zone = document.getElementById('urgentTaskZone').value;
+            const employeeEmail = document.getElementById('urgentAssignTo').value || null;
+            const photoFile = document.getElementById('urgentTaskPhoto').files[0] || null;
+            
+            if (!description || !zone || zone === "") {
+                showNotification("Please fill all required fields", "error");
+                return;
+            }
+            
+            // Validate email if provided
+            if (employeeEmail && !validateEmail(employeeEmail)) {
+                showNotification("Please enter a valid email address", "error");
+                return;
+            }
+            
+            const submitBtn = document.getElementById('submitUrgentTaskBtn');
+            if (!submitBtn) return;
+            
+            const originalText = submitBtn.innerHTML;
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CREATING...';
+            
+            try {
+                const success = await createUrgentTask(description, zone, photoFile, employeeEmail);
+                
+                if (success) {
+                    // Clear form
+                    document.getElementById('urgentTaskDescription').value = '';
+                    document.getElementById('urgentTaskZone').selectedIndex = 0;
+                    document.getElementById('urgentAssignTo').selectedIndex = 0;
+                    document.getElementById('urgentTaskPhoto').value = '';
+                    document.getElementById('urgentPhotoPreview').innerHTML = '';
+                    
+                    showNotification("Urgent task created successfully!" + (employeeEmail ? " Assigned to employee." : ""), "success");
+                    
+                    // Update UI
+                    updateAdminDashboard();
+                }
+            } catch (error) {
+                console.error("Error creating urgent task:", error);
+                showNotification("Error: " + error.message, "error");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        }
+        
+        // Load all employees
+        async function loadAllEmployees() {
+            try {
+                const employeesList = document.getElementById('employeesList');
+                if (!employeesList) return;
+                
+                // Get employees from main script
+                if (typeof getAllEmployees === 'function') {
+                    allEmployees = await getAllEmployees();
+                } else {
+                    // Fallback to local storage
+                    allEmployees = JSON.parse(localStorage.getItem('greenfield_employees') || '{}');
+                }
+                
+                const activeEmployees = Object.entries(allEmployees).filter(([email, emp]) => emp.is_active !== false);
+                
+                if (activeEmployees.length === 0) {
+                    employeesList.innerHTML = `
+                        <div style="text-align: center; padding: 30px; color: #666;">
+                            <i class="fas fa-users-slash" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                            <h4>No Employees Found</h4>
+                            <p>No employees found in the system.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = '<div style="display: grid; gap: 15px;">';
+                
+                // Sort by role and name
+                const sortedEmployees = activeEmployees.sort((a, b) => {
+                    const roleOrder = { system_admin: 0, admin: 1, team: 2 };
+                    const roleA = roleOrder[a[1].role] || 3;
+                    const roleB = roleOrder[b[1].role] || 3;
+                    
+                    if (roleA !== roleB) return roleA - roleB;
+                    return a[1].name.localeCompare(b[1].name);
+                });
+                
+                sortedEmployees.forEach(([email, emp]) => {
+                    // Count tasks for this employee
+                    const tasksCreated = Object.values(allAdminTasks || {}).filter(task => 
+                        task.requested_by === email
+                    ).length;
+                    
+                    const tasksAssigned = Object.values(allAdminTasks || {}).filter(task => 
+                        task.assigned_to === email
+                    ).length;
+                    
+                    const savedUser = JSON.parse(localStorage.getItem('greenfield_user') || '{}');
+                    const isCurrentUser = email === savedUser.email;
+                    const isSystemAdmin = emp.role === 'system_admin';
+                    
+                    html += `
+                        <div class="employee-card ${emp.is_hardcoded ? 'hardcoded-employee' : ''}" 
+                             style="${emp.is_hardcoded ? 'border: 2px solid #ff9800; background: #fff8e1;' : ''}">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div style="flex: 1;">
+                                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                                        <div class="employee-avatar ${emp.role}">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        <div>
+                                            <strong style="color: #1b5e20; font-size: 1.1rem;">${emp.name}</strong>
+                                            <div style="font-size: 0.9rem; color: #666;">${email}</div>
+                                            <div style="font-size: 0.8rem; color: #888; margin-top: 2px;">
+                                                <span class="status-badge" style="background: ${isSystemAdmin ? '#c62828' : emp.role === 'admin' ? '#1b5e20' : '#4caf50'}; color: white;">
+                                                    ${isSystemAdmin ? 'SYSTEM ADMIN' : emp.role.toUpperCase()}
+                                                </span>
+                                                ${emp.is_hardcoded ? '<span class="status-badge" style="background: #ff9800; color: white; margin-left: 5px;">HARDCODED</span>' : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                                        <div>
+                                            <div style="font-size: 0.85rem; color: #888;">Department</div>
+                                            <div><i class="fas fa-briefcase"></i> ${emp.department || 'Not specified'}</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.85rem; color: #888;">Zone</div>
+                                            <div><i class="fas fa-map-marker-alt"></i> ${emp.zone || 'Not assigned'}</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.85rem; color: #888;">Password</div>
+                                            <div><i class="fas fa-key"></i> ${emp.password || 'N/A'}</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.85rem; color: #888;">Source</div>
+                                            <div><i class="fas fa-database"></i> ${emp.is_hardcoded ? 'Hardcoded' : 'Firebase'}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                employeesList.innerHTML = html;
+                
+            } catch (error) {
+                console.error("Error loading employees:", error);
+                showNotification("Failed to load employees", "error");
+            }
+        }
+        
+        // Generate password
+        function generatePassword() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&';
+            let password = '';
+            for (let i = 0; i < 10; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            document.getElementById('newEmpPassword').value = password;
+        }
+        
+        // Add new employee
+        async function addNewEmployee() {
+            const name = document.getElementById('newEmpName').value.trim();
+            const email = document.getElementById('newEmpEmail').value.trim().toLowerCase();
+            const password = document.getElementById('newEmpPassword').value;
+            const role = document.getElementById('newEmpRole').value;
+            const department = document.getElementById('newEmpDept').value;
+            const zone = document.getElementById('newEmpZone').value;
+            
+            if (!name || !email || !password) {
+                showNotification('Please fill all required fields', 'error');
+                return;
+            }
+            
+            // Validate email
+            if (!validateEmail(email)) {
+                showNotification('Please enter a valid email address (must contain @ and .)', 'error');
+                return;
+            }
+            
+            const employeeData = {
+                name: name,
+                email: email,
+                password: password,
+                department: department,
+                zone: zone,
+                role: role
+            };
+            
+            const success = await addEmployee(employeeData);
+            if (success) {
+                // Clear form
+                document.getElementById('newEmpName').value = '';
+                document.getElementById('newEmpEmail').value = '';
+                document.getElementById('newEmpPassword').value = '';
+                document.getElementById('newEmpZone').value = '';
+                document.getElementById('newEmpRole').selectedIndex = 0;
+                document.getElementById('newEmpDept').selectedIndex = 0;
+                
+                // Reload employees list
+                loadAllEmployees();
+            }
+        }
+        
+        // Filter tasks - Admins see ALL tasks
+        function filterTasks() {
+            const taskList = document.getElementById('taskList');
+            if (!taskList) return;
+            
+            const searchTerm = document.getElementById('adminSearch')?.value.toLowerCase() || '';
+            const statusFilter = document.getElementById('filterStatus')?.value || '';
+            
+            // Admins see ALL tasks
+            let filteredTasks = Object.values(allAdminTasks || {});
+            
+            if (searchTerm) {
+                filteredTasks = filteredTasks.filter(task => {
+                    return (
+                        (task.description && task.description.toLowerCase().includes(searchTerm)) ||
+                        (task.zone && task.zone.toLowerCase().includes(searchTerm)) ||
+                        (task.requested_by && task.requested_by.toLowerCase().includes(searchTerm)) ||
+                        (task.assigned_to && task.assigned_to.toLowerCase().includes(searchTerm)) ||
+                        (task.requested_by_name && task.requested_by_name.toLowerCase().includes(searchTerm)) ||
+                        (task.status && task.status.toLowerCase().includes(searchTerm))
+                    );
+                });
+            }
+            
+            if (statusFilter) {
+                filteredTasks = filteredTasks.filter(task => {
+                    return task.status === statusFilter;
+                });
+            }
+            
+            // Sort by date (newest first)
+            filteredTasks.sort((a, b) => {
+                const dateA = a.requested_at ? new Date(a.requested_at).getTime() : 0;
+                const dateB = b.requested_at ? new Date(b.requested_at).getTime() : 0;
+                return dateB - dateA; // Newest first
+            });
+            
+            // Update task count
+            const taskCountElement = document.getElementById('taskCount');
+            if (taskCountElement) {
+                taskCountElement.textContent = filteredTasks.length;
+            }
+            
+            if (filteredTasks.length === 0) {
+                taskList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <i class="fas fa-clipboard-list" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                        <h4>No tasks found</h4>
+                        <p>${searchTerm ? 'Try a different search term' : 'Create your first task!'}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '<div style="display: grid; gap: 15px;">';
+            
+            filteredTasks.forEach((task) => {
+                const status = task.status || 'pending';
+                const taskDate = task.requested_at ? 
+                    new Date(task.requested_at).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }) : 'Date not set';
+                
+                const savedUser = JSON.parse(localStorage.getItem('greenfield_user') || '{}');
+                const canDelete = savedUser.isSystemAdmin || savedUser.email === 'chhabi@landscape.com';
+                
+                html += `
+                    <div class="task-card ${task.is_urgent ? 'urgent' : ''} ${task.is_admin_request ? 'admin-request' : ''}">
+                        <div class="task-meta">
+                            <div>
+                                <span class="status-badge status-${status.charAt(0).toUpperCase() + status.slice(1)}">
+                                    <i class="fas fa-${getStatusIcon(status)}"></i> ${status.toUpperCase()}
+                                </span>
+                                ${task.is_urgent ? '<span class="priority-badge priority-urgent"><i class="fas fa-exclamation-triangle"></i> URGENT</span>' : ''}
+                                ${task.is_admin_request ? '<span class="status-badge" style="background: #1b5e20; color: white; margin-left: 5px;"><i class="fas fa-user-shield"></i> ADMIN</span>' : ''}
+                                <strong>${task.zone || 'No Zone'}</strong>
+                            </div>
+                            <small>${taskDate}</small>
+                        </div>
+                        
+                        <p style="margin: 10px 0;">${task.description || 'No description'}</p>
+                        
+                        <div style="font-size: 14px; color: #666; margin: 10px 0;">
+                            <div><i class="fas fa-user"></i> <strong>By:</strong> ${task.requested_by_name || task.requested_by}</div>
+                            ${task.assigned_to ? `<div><i class="fas fa-user-check"></i> <strong>Assigned to:</strong> ${task.assigned_to_name || task.assigned_to}</div>` : ''}
+                            ${task.approved_by ? `<div><i class="fas fa-check-circle"></i> <strong>Approved by:</strong> ${task.approved_by_name || task.approved_by}</div>` : ''}
+                            ${task.completed_by ? `<div><i class="fas fa-flag-checkered"></i> <strong>Completed by:</strong> ${task.completed_by_name || task.completed_by}</div>` : ''}
+                        </div>
+                        
+                        ${task.photoBase64 ? `
+                            <div style="margin: 10px 0;">
+                                <img src="${task.photoBase64}" alt="Task photo" 
+                                     style="width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; cursor: pointer;"
+                                     onclick="openPhotoModal('${task.photoBase64.replace(/'/g, "\\'").replace(/"/g, '\\"')}')">
+                            </div>
+                        ` : ''}
+                        
+                        <div class="task-actions">
+                            ${status === 'pending' && task.needs_approval && !task.is_admin_request ? `
+                                <button class="btn small submit" onclick="approveTaskWithNote('${task.id}')">
+                                    <i class="fas fa-check"></i> Approve
+                                </button>
+                                <button class="btn small red" onclick="rejectTaskWithReason('${task.id}')">
+                                    <i class="fas fa-times"></i> Reject
+                                </button>
+                            ` : ''}
+                            
+                            ${status === 'approved' && !task.assigned_to ? `
+                                <button class="btn small submit" onclick="assignTaskToDropdown('${task.id}')">
+                                    <i class="fas fa-user-check"></i> Assign
+                                </button>
+                            ` : ''}
+                            
+                            ${status === 'approved' && task.assigned_to ? `
+                                <button class="btn small" onclick="markTaskComplete('${task.id}')">
+                                    <i class="fas fa-check-circle"></i> Complete
+                                </button>
+                            ` : ''}
+                            
+                            ${canDelete ? `
+                                <button class="btn small red" onclick="deleteTask('${task.id}')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            taskList.innerHTML = html;
+        }
+        
+        // Assign task from dropdown
+        function assignTaskToDropdown(taskId) {
+            document.getElementById('taskToAssign').value = taskId;
+            openTab(null, 'assignTaskTab');
+        }
+        
+        // Open photo modal
+        function openPhotoModal(photoBase64) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.9);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+            `;
+            
+            modal.innerHTML = `
+                <div style="position: relative; max-width: 90%; max-height: 90%;">
+                    <img src="${photoBase64}" alt="Full size" style="max-width: 100%; max-height: 90vh; border-radius: 10px;">
+                    <button onclick="this.parentElement.parentElement.remove()" 
+                            style="position: absolute; top: -40px; right: 0; background: none; border: none; color: white; 
+                                   font-size: 30px; cursor: pointer;">×</button>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+        
+        // Show statistics modal
+        function showStatsModal() {
+            const taskArray = Object.values(allAdminTasks || {});
+            const total = taskArray.length;
+            const pending = taskArray.filter(t => t.status === 'pending').length;
+            const approved = taskArray.filter(t => t.status === 'approved').length;
+            const completed = taskArray.filter(t => t.status === 'completed').length;
+            const urgent = taskArray.filter(t => t.is_urgent).length;
+            
+            const activeEmployees = Object.values(allEmployees).filter(emp => emp.is_active !== false).length;
+            
+            const statsHTML = `
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                    <div style="grid-column: span 2; text-align: center; padding: 20px; background: #f8fff8; border-radius: 10px;">
+                        <h3 style="color: #1b5e20;">System Statistics</h3>
+                    </div>
+                    
+                    <div style="padding: 15px; background: #fff3e0; border-radius: 10px;">
+                        <h4 style="color: #e65100;">Total Tasks: ${total}</h4>
+                        <p>All system tasks</p>
+                    </div>
+                    
+                    <div style="padding: 15px; background: #e8f5e8; border-radius: 10px;">
+                        <h4 style="color: #2e7d32;">Active Employees: ${activeEmployees + 8}</h4>
+                        <p>Team members (8 hardcoded + ${activeEmployees} in Firebase)</p>
+                    </div>
+                    
+                    <div style="padding: 15px; background: #fff3e0; border-radius: 10px;">
+                        <h4 style="color: #e65100;">Pending: ${pending}</h4>
+                        <p>${total ? ((pending/total)*100).toFixed(1) : 0}% of total</p>
+                    </div>
+                    
+                    <div style="padding: 15px; background: #e8f5e8; border-radius: 10px;">
+                        <h4 style="color: #2e7d32;">Approved: ${approved}</h4>
+                        <p>${total ? ((approved/total)*100).toFixed(1) : 0}% of total</p>
+                    </div>
+                    
+                    <div style="padding: 15px; background: #e3f2fd; border-radius: 10px;">
+                        <h4 style="color: #1565c0;">Completed: ${completed}</h4>
+                        <p>${total ? ((completed/total)*100).toFixed(1) : 0}% of total</p>
+                    </div>
+                    
+                    <div style="padding: 15px; background: #ffebee; border-radius: 10px;">
+                        <h4 style="color: #c62828;">Urgent: ${urgent}</h4>
+                        <p>Priority tasks</p>
+                    </div>
+                    
+                    <div style="padding: 15px; background: #fff8e1; border-radius: 10px; grid-column: span 2;">
+                        <h4 style="color: #ff9800;">
+                            <i class="fas fa-chart-pie"></i> Task Distribution
+                        </h4>
+                        <div style="height: 20px; background: #e0e0e0; border-radius: 10px; margin: 10px 0; overflow: hidden;">
+                            <div style="height: 100%; background: #4caf50; width: ${total ? ((completed/total)*100) : 0}%; float: left;"></div>
+                            <div style="height: 100%; background: #2e7d32; width: ${total ? ((approved/total)*100) : 0}%; float: left;"></div>
+                            <div style="height: 100%; background: #ff9800; width: ${total ? ((pending/total)*100) : 0}%; float: left;"></div>
+                        </div>
+                        <div style="font-size: 12px; color: #666;">
+                            <span style="color: #4caf50;">■ Completed</span> | 
+                            <span style="color: #2e7d32;">■ Approved</span> | 
+                            <span style="color: #ff9800;">■ Pending</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('statsContent').innerHTML = statsHTML;
+            document.getElementById('statsModal').classList.remove('hidden');
+        }
+        
+        // Close stats modal
+        function closeStatsModal() {
+            document.getElementById('statsModal').classList.add('hidden');
+        }
+        
+        // Make functions available globally
+        window.handleAdminLogin = handleAdminLogin;
+        window.togglePassword = togglePassword;
+        window.openTab = openTab;
+        window.showStatsModal = showStatsModal;
+        window.closeStatsModal = closeStatsModal;
+        window.filterTasks = filterTasks;
+        window.renderApprovalTasks = renderApprovalTasks;
+        window.approveTaskWithNote = approveTaskWithNote;
+        window.rejectTaskWithReason = rejectTaskWithReason;
+        window.submitAdminTask = submitAdminTask;
+        window.submitUrgentTask = submitUrgentTask;
+        window.assignSelectedTask = assignSelectedTask;
+        window.assignTaskToDropdown = assignTaskToDropdown;
+        window.loadAllEmployees = loadAllEmployees;
+        window.generatePassword = generatePassword;
+        window.addNewEmployee = addNewEmployee;
+        window.openPhotoModal = openPhotoModal;
+        window.updateAdminDashboard = updateAdminDashboard;
+    </script>
+</body>
+</html>
